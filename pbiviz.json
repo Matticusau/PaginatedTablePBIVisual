@@ -7,17 +7,19 @@
     "version": "1.0.0",
     "description": "",
     "supportUrl": "",
-    "gitHubUrl": ""
+    "gitHubUrl": "https://github.com/Matticusau/PaginatedTablePBIVisual"
   },
   "apiVersion": "1.4.0",
   "author": {
-    "name": "",
+    "name": "matticusau",
     "email": ""
   },
   "assets": {
     "icon": "assets/icon.png"
   },
-  "externalJS": [],
+  "externalJS": [
+    "node_modules/d3/d3.js"
+  ],
   "style": "style/visual.less",
   "capabilities": "capabilities.json"
 }

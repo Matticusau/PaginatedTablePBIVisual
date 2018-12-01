@@ -27,7 +27,7 @@ module powerbi.extensibility.visual {
 
     interface PaginatedTableRow {
         cells: DataViewTableRow;
-  //      selectionId: ISelectionId;
+        selectionId: ISelectionId;
     };
     /**
      * Interface for PaginatedTable settings.
@@ -127,8 +127,15 @@ module powerbi.extensibility.visual {
         }
         //push the rows
         for (let i = 0; i < data.length; i++) {
+
+            const selectionId: ISelectionId = host.createSelectionIdBuilder()
+                // .withCategory(data[i], i)
+                // .withSeries(dataViews[0].col, i)
+                .createSelectionId();
+
             PaginatedTableRows.push({
-                cells: data[i]
+                cells: data[i],
+                selectionId,
             });
         }
         //push the navigationitems
@@ -163,6 +170,8 @@ module powerbi.extensibility.visual {
         private PaginatedTableSettings: PaginatedTableSettings;
         //private tooltipServiceWrapper: ITooltipServiceWrapper;
 
+        private tableSelection: d3.selection.Update<PaginatedTableRow>;
+
         static Config = {
             xScalePadding: 0.1,
             solidOpacity: 1,
@@ -187,6 +196,11 @@ module powerbi.extensibility.visual {
         constructor(options: VisualConstructorOptions) {
             this.host = options.host;
             this.selectionManager = options.host.createSelectionManager();
+
+            this.selectionManager.registerOnSelectCallback(() => {
+                this.syncSelectionState(this.tableSelection, this.selectionManager.getSelectionIds() as ISelectionId[]);
+            });
+
             //this.tooltipServiceWrapper = createTooltipServiceWrapper(this.host.tooltipService, options.element);
             let svg = this.svg = d3.select(options.element)
                 .append('div')
@@ -269,6 +283,27 @@ module powerbi.extensibility.visual {
                     return html;
                 });
 
+            this.tableSelection.on('click', (d) => {
+                // Allow selection only if the visual is rendered in a view that supports interactivity (e.g. Report)
+                if (this.host.allowInteractions) {
+                    const isCtrlPressed: boolean = (d3.event as MouseEvent).ctrlKey;
+
+                    this.selectionManager
+                        .select(d.selectionId, isCtrlPressed)
+                        // .select(d.selectionId, isCtrlPressed)
+                        .then((ids: ISelectionId[]) => {
+                            this.syncSelectionState(this.tableSelection, ids);
+                        });
+
+                    (<Event>d3.event).stopPropagation();
+                }
+            });
+
+            this.tableSelection
+                .exit()
+                .remove();
+
+
             //add the pagination
             let navigation = this.paginatedTableContainer.append('div')
             navigation.attr('width', width);
@@ -343,6 +378,11 @@ module powerbi.extensibility.visual {
             */
         }
 
+
+        // add  syncSelectionState()
+
+        // add isSelectionIdInArray()
+        
         /**
          * Enumerates through the objects defined in the capabilities and adds the properties to the format pane
          *

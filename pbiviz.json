@@ -4,7 +4,7 @@
     "displayName": "paginatedTable",
     "guid": "PBI_CV_9894B302_1DFF_4A96_ABFE_BF8588197166",
     "visualClassName": "PaginatedTable",
-    "version": "1.0.0",
+    "version": "2.0.0-beta1",
     "description": "",
     "supportUrl": "",
     "gitHubUrl": "https://github.com/Matticusau/PaginatedTablePBIVisual"

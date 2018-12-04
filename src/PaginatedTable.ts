@@ -1,6 +1,9 @@
 //TODO: sorting, scrollbar, formatting
 
 module powerbi.extensibility.visual {
+    // powerbi.visuals
+    import ISelectionId = powerbi.visuals.ISelectionId;
+
     /**
      * Interface for PaginatedTables viewmodel.
      *
@@ -139,13 +142,21 @@ module powerbi.extensibility.visual {
             });
         }
         //push the navigationitems
+        const selectionIdPrev: ISelectionId = host.createSelectionIdBuilder()
+            .withMeasure('PREV')
+            .createSelectionId();
+        const selectionIdNext: ISelectionId = host.createSelectionIdBuilder()
+            .withMeasure('NEXT')
+            .createSelectionId();
         PaginatedTableNavigationItems.push({
             svg: '<svg width="15px" height="20px" viewBox="0 0 50 80" xml:space="preserve"><polyline class="paginatedTableNavigationButtonArrow" points= "45.63,75.8 0.375, 38.087 45.63, 0.375 "/>< /svg>',
-            selectionId:'PREV'
+            // selectionId:'PREV'
+            selectionId: selectionIdNext
         });
         PaginatedTableNavigationItems.push({
             svg: '<svg width="15px" height="20px" viewBox="0 0 50 80" xml:space="preserve"><polyline class="paginatedTableNavigationButtonArrow" points= "0.375,0.375 45.63, 38.087 0.375, 75.8 "/></svg>',
-            selectionId: 'NEXT'
+            // selectionId: 'NEXT'
+            selectionId: selectionIdNext
         });
 
         return {
@@ -320,10 +331,22 @@ module powerbi.extensibility.visual {
                 })
                 .on('click', function (d) {
                     let newstartingRow = 0;
-                    if (d.selectionId == "PREV") {
+                    // if (d.selectionId == "PREV") {
+                    //     newstartingRow = Math.max(0,startingrow - pageSize);
+                    // }
+                    // if(d.selectionId == "NEXT") {
+                    //     newstartingRow = startingrow + pageSize;
+                    // }
+                    const selectionIdPrev: ISelectionId = this.host.createSelectionIdBuilder()
+                        .withMeasure('PREV')
+                        .createSelectionId();
+                    const selectionIdNext: ISelectionId = this.host.createSelectionIdBuilder()
+                        .withMeasure('NEXT')
+                        .createSelectionId();
+                    if (d.selectionId == selectionIdPrev) {
                         newstartingRow = Math.max(0,startingrow - pageSize);
                     }
-                    if(d.selectionId == "NEXT") {
+                    if(d.selectionId == selectionIdNext) {
                         newstartingRow = startingrow + pageSize;
                     }
                     console.log("newstartingRow: " + newstartingRow);
@@ -379,9 +402,48 @@ module powerbi.extensibility.visual {
         }
 
 
-        // add  syncSelectionState()
+        private syncSelectionState(
+            selection: d3.Selection<PaginatedTableRow>,
+            selectionIds: ISelectionId[]
+        ): void {
+            if (!selection || !selectionIds) {
+                return;
+            }
 
-        // add isSelectionIdInArray()
+            if (!selectionIds.length) {
+                selection.style({
+                    "fill-opacity": null,
+                    "stroke-opacity": null,
+                });
+
+                return;
+            }
+
+            const self: this = this;
+
+            selection.each(function (rowDataPoint: PaginatedTableRow) {
+                const isSelected: boolean = self.isSelectionIdInArray(selectionIds, rowDataPoint.selectionId);
+
+                const opacity: number = isSelected
+                    ? PaginatedTable.Config.solidOpacity
+                    : PaginatedTable.Config.transparentOpacity;
+
+                d3.select(this).style({
+                    "fill-opacity": opacity,
+                    "stroke-opacity": opacity,
+                });
+            });
+        }
+
+        private isSelectionIdInArray(selectionIds: ISelectionId[], selectionId: ISelectionId): boolean {
+            if (!selectionIds || !selectionId) {
+                return false;
+            }
+
+            return selectionIds.some((currentSelectionId: ISelectionId) => {
+                return currentSelectionId.includes(selectionId);
+            });
+        }
         
         /**
          * Enumerates through the objects defined in the capabilities and adds the properties to the format pane

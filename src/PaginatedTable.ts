@@ -134,6 +134,7 @@ module powerbi.extensibility.visual {
             const selectionId: ISelectionId = host.createSelectionIdBuilder()
                 // .withCategory(data[i], i)
                 // .withSeries(dataViews[0].col, i)
+                .withMeasure(columns[0].displayName)
                 .createSelectionId();
 
             PaginatedTableRows.push({
